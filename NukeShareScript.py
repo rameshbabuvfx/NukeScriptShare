@@ -11,8 +11,7 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 import nuke
-import nukescripts
-import getpass
+import getpass,datetime
 import pymongo
 from mainUI import Ui_MainWindow
 
@@ -22,12 +21,13 @@ from mainUI import Ui_MainWindow
 
 SERVER = pymongo.MongoClient('localhost',27017)
 DB = SERVER['NukeShare']
-ARTISTNAME_COLLECTION = DB['ArtistName']
+COLLECTION = DB['NukeData']
 
-NUKESCIPT_COLLECTION = DB['Nukescript']
-
-
+date = datetime.datetime.now()
 username = getpass.getuser()
+
+
+
 class MainWindow(QMainWindow,Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         SenderPath = 'F:/SERVER/projects/rrr/ramesh'
 
 
-        self.ShareButton.clicked.connect(self.copyScript)
+        self.ShareButton.clicked.connect(self.insertData)
 
 
         artistNames = ['kanna','Bunny','kiran','Bujji']
@@ -55,21 +55,29 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         self.SentNameEdit.setText(username)
 
-        self.model = QFileSystemModel()
-        self.model.setRootPath(ReceivedPath)
-        self.ReceivedList.setModel(self.model)
-        self.ReceivedList.hideColumn(1)
-        self.ReceivedList.hideColumn(2)
-        self.ReceivedList.setRootIndex(self.model.index(ReceivedPath))
-        self.ReceivedList.alternatingRowColors()
+        # self.model = QFileSystemModel()
+        # self.model.setRootPath(ReceivedPath)
+        # self.ReceivedList.setModel(self.model)
+        # self.ReceivedList.hideColumn(1)
+        # self.ReceivedList.hideColumn(2)
+        # self.ReceivedList.setRootIndex(self.model.index(ReceivedPath))
+        # self.ReceivedList.alternatingRowColors()
 
 
 
-        self.SentList.setModel(self.model)
-        self.SentList.hideColumn(1)
-        self.SentList.hideColumn(2)
-        self.SentList.setRootIndex(self.model.index(ReceivedPath))
-        self.SentList.alternatingRowColors()
+
+
+
+
+
+        self.SentList.addItem("wkuniw")
+
+
+        # self.SentList.setModel(self.model)
+        # self.SentList.hideColumn(1)
+        # self.SentList.hideColumn(2)
+        # self.SentList.setRootIndex(self.model.index(ReceivedPath))
+        # self.SentList.alternatingRowColors()
 
 
         self.Pastebutton.clicked.connect(self.pasteScript)
@@ -78,22 +86,28 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
 
 
-    def copyScript(self):
+    def receivedScriptList(self):
 
+        self.ReceivedList.setRowCount(10)
+        self.ReceivedList.setColumnCount(3)
+
+
+    def insertData(self):
 
         nuke.nodeCopy("%clipboard%")
-        NUKESCIPT_COLLECTION.insert_one({"script":"%clipboard%"})
+        script = QApplication.clipboard().text()
+        NukeData = {'ReceiverName':'','SenderName':username,'date':date,'script':script}
+        COLLECTION.insert_one(NukeData)
 
 
     def pasteScript(self):
 
-        clipboardScript = NUKESCIPT_COLLECTION.find_one({})
+        clipboardScript = COLLECTION.find_one({})
 
         PasteScript = clipboardScript['script']
 
         QApplication.clipboard().setText(PasteScript)
 
-        #pc.copy(PasteScript)
         nuke.nodePaste('%clipboard%')
 
 
