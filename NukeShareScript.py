@@ -10,7 +10,7 @@ sys.path.append('F:/PYTHON/Python calculator/venv/Lib/site-packages')
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-#import nuke
+import nuke
 import getpass,datetime,os
 import pymongo
 from mainUI import Ui_MainWindow
@@ -23,7 +23,8 @@ SERVER = pymongo.MongoClient('localhost',27017)
 DB = SERVER['NukeShare']
 COLLECTION = DB['NukeData']
 
-date = datetime.datetime.now()
+now = datetime.datetime.now()
+
 username = getpass.getuser()
 
 
@@ -32,6 +33,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
+        self.receivedScriptList()
         self.show()
 
 
@@ -51,6 +53,8 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.SenderName.setInsertPolicy(QComboBox.NoInsert)
         self.SenderName.setCompleter(self.completer)
 
+        self.ReceivedList.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ReceivedList.hideColumn(3)
 
         self.ReceivedNameEdit.setText(username)
 
@@ -58,7 +62,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         self.Pastebutton.clicked.connect(self.pasteScript)
 
-        self.Refreshbutton.clicked.connect(self.refreshPanel)
+        self.Refreshbutton.clicked.connect(self.refreshApp)
 
 
 
@@ -74,44 +78,60 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.Sending_To = self.SenderName.currentText()
         nuke.nodeCopy("%clipboard%")
         script = QApplication.clipboard().text()
-        NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':date,'script':script}
+        NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':now,'script':script}
         COLLECTION.insert_one(NukeData)
-
-
-
-    def pasteScript(self):
-
-        clipboardScript = COLLECTION.find_one({})
-
-        PasteScript = clipboardScript['script']
-
-        QApplication.clipboard().setText(PasteScript)
-
-        nuke.nodePaste('%clipboard%')
-        pass
 
 
 
     def receivedScriptList(self):
 
-        nukedata = COLLECTION.find({'Send_To':username}).sort("date", -1)
+        nukedata = COLLECTION.find({'Send_To':username}).sort('date',-1)
         self.ReceivedList.setRowCount(nukedata.count())
+        self.ReceivedList.setColumnCount(4)
 
-        for i in enumerate(nukedata):
-            Table_data = COLLECTION.find({'Send_To': username})
-            print(Table_data)
-            # ScriptName = Table_data['ScriptName']
-            # SenderName = Table_data['SenderName']
-            # Date = str(Table_data['date'])
+        for x,i in enumerate(nukedata):
 
-            # self.ReceivedList.setItem(QTableWidgetItem(i,0,ScriptName))
-            # self.ReceivedList.setItem(QTableWidgetItem(i,1,SenderName))
-            # self.ReceivedList.setItem(QTableWidgetItem(i,2,Date))
+            ScriptName = i['ScriptName']
+            SenderName = i['SenderName']
+            #Date = str(i['date'])
+            time = self.time_difference(i['date'])
+            NukeScript = i['script']
 
 
+            self.ReceivedList.setItem(x,0,QTableWidgetItem(ScriptName))
+            self.ReceivedList.setItem(x,1,QTableWidgetItem(SenderName))
+            self.ReceivedList.setItem(x,2,QTableWidgetItem(time))
+            self.ReceivedList.setItem(x, 3, QTableWidgetItem(NukeScript))
 
 
-    def refreshPanel(self):
+    def pasteScript(self):
+
+        row = self.ReceivedList.currentRow()
+
+        item = self.ReceivedList.item(row,3).text()
+
+        QApplication.clipboard().setText(item)
+
+        nuke.nodePaste('%clipboard%')
+
+
+
+    def time_difference(self, date):
+
+        delta = datetime.datetime.today() - date
+        if delta.days:
+            return "%s day(s)" % delta.days
+        seconds = delta.seconds
+        if seconds < 60:
+            return "A few seconds ago"
+        elif seconds < 3600:
+            return "%s minute(s) ago" % int(seconds/60)
+        elif seconds < 86400:
+            return "%s hours(s) ago" % int(seconds/3600)
+
+
+
+    def refreshApp(self):
         self.receivedScriptList()
 
 
