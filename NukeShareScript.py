@@ -10,8 +10,8 @@ sys.path.append('F:/PYTHON/Python calculator/venv/Lib/site-packages')
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-import nuke
-import getpass,datetime
+#import nuke
+import getpass,datetime,os
 import pymongo
 from mainUI import Ui_MainWindow
 
@@ -42,7 +42,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.ShareButton.clicked.connect(self.insertData)
 
 
-        artistNames = ['kanna','Bunny','kiran','Bujji']
+        artistNames = ['kanna','Bunny','kiran','Bujji','DELL']
         self.completer = QCompleter(artistNames)
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.SenderName.addItems(artistNames)
@@ -51,34 +51,10 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.SenderName.setInsertPolicy(QComboBox.NoInsert)
         self.SenderName.setCompleter(self.completer)
 
+
         self.ReceivedNameEdit.setText(username)
 
         self.SentNameEdit.setText(username)
-
-        # self.model = QFileSystemModel()
-        # self.model.setRootPath(ReceivedPath)
-        # self.ReceivedList.setModel(self.model)
-        # self.ReceivedList.hideColumn(1)
-        # self.ReceivedList.hideColumn(2)
-        # self.ReceivedList.setRootIndex(self.model.index(ReceivedPath))
-        # self.ReceivedList.alternatingRowColors()
-
-
-
-
-
-
-
-
-        self.SentList.addItem("wkuniw")
-
-
-        # self.SentList.setModel(self.model)
-        # self.SentList.hideColumn(1)
-        # self.SentList.hideColumn(2)
-        # self.SentList.setRootIndex(self.model.index(ReceivedPath))
-        # self.SentList.alternatingRowColors()
-
 
         self.Pastebutton.clicked.connect(self.pasteScript)
 
@@ -86,18 +62,21 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
 
 
-    def receivedScriptList(self):
-
-        self.ReceivedList.setRowCount(10)
-        self.ReceivedList.setColumnCount(3)
-
-
     def insertData(self):
 
+
+        NukeScriptName = nuke.root().knob('name').value()
+        ScriptName = os.path.basename(NukeScriptName)
+        if NukeScriptName == "":
+            ScriptName = 'From - '+username
+        else :
+            pass
+        self.Sending_To = self.SenderName.currentText()
         nuke.nodeCopy("%clipboard%")
         script = QApplication.clipboard().text()
-        NukeData = {'ReceiverName':'','SenderName':username,'date':date,'script':script}
+        NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':date,'script':script}
         COLLECTION.insert_one(NukeData)
+
 
 
     def pasteScript(self):
@@ -109,10 +88,31 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         QApplication.clipboard().setText(PasteScript)
 
         nuke.nodePaste('%clipboard%')
+        pass
+
+
+
+    def receivedScriptList(self):
+
+        nukedata = COLLECTION.find({'Send_To':username}).sort("date", -1)
+        self.ReceivedList.setRowCount(nukedata.count())
+
+        for i in enumerate(nukedata):
+            Table_data = COLLECTION.find({'Send_To': username})
+            print(Table_data)
+            # ScriptName = Table_data['ScriptName']
+            # SenderName = Table_data['SenderName']
+            # Date = str(Table_data['date'])
+
+            # self.ReceivedList.setItem(QTableWidgetItem(i,0,ScriptName))
+            # self.ReceivedList.setItem(QTableWidgetItem(i,1,SenderName))
+            # self.ReceivedList.setItem(QTableWidgetItem(i,2,Date))
+
+
 
 
     def refreshPanel(self):
-        self.update()
+        self.receivedScriptList()
 
 
 if __name__ == '__main__':
