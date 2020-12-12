@@ -47,20 +47,17 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.SenderName.setInsertPolicy(QComboBox.NoInsert)
         self.SenderName.setCompleter(self.completer)
 
+
         self.ReceivedList.setHorizontalHeaderLabels(['Script-Name', 'Sender', 'Time   '])
         self.ReceivedList.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.ReceivedList.hideColumn(3)
-        self.ReceivedList.hideColumn(4)
+        #self.ReceivedList.hideColumn(3)
         self.ReceivedList.itemClicked.connect(self.clickedReceivedList)
 
 
         self.SentList.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
         self.SentList.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.SentList.hideColumn(3)
-        self.SentList.hideColumn(4)
+        #self.SentList.hideColumn(3)
         self.SentList.itemClicked.connect(self.clickedSentList)
-
-
 
 
         self.ReceivedNameEdit.setText(username)
@@ -73,11 +70,13 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
 
     def clickedReceivedList(self):
+
         self.SentList.clearSelection()
         self.RL = True
 
 
     def clickedSentList(self):
+
         self.ReceivedList.clearSelection()
         self.RL = False
 
@@ -97,7 +96,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         COLLECTION.insert_one(NukeData)
 
 
-
     def receivedScriptList(self):
 
         nukedata = COLLECTION.find({'Send_To':username}).sort('date',-1)
@@ -109,16 +107,12 @@ class MainWindow(QMainWindow,Ui_MainWindow):
             ScriptName = i['ScriptName']
             SenderName = i['SenderName']
             time = self.time_difference(i['date'])
-            NukeScript = i['script']
-            Received = 'Received'
-
+            id = str(i['_id'])
 
             self.ReceivedList.setItem(x,0,QTableWidgetItem(ScriptName))
             self.ReceivedList.setItem(x,1,QTableWidgetItem(SenderName))
             self.ReceivedList.setItem(x,2,QTableWidgetItem(time))
-            self.ReceivedList.setItem(x, 3, QTableWidgetItem(NukeScript))
-            self.ReceivedList.setItem(x, 4, QTableWidgetItem(Received))
-
+            self.ReceivedList.setItem(x,3,QTableWidgetItem(id))
 
 
     def sentRecent(self):
@@ -132,28 +126,36 @@ class MainWindow(QMainWindow,Ui_MainWindow):
             ScriptName = i['ScriptName']
             Send_To = 'Sent-'+i['Send_To']
             time = self.time_difference(i['date'])
-            NukeScript = i['script']
-            Sent = "Sent"
-
+            id = str(i['_id'])
 
             self.SentList.setItem(x,0,QTableWidgetItem(ScriptName))
             self.SentList.setItem(x,1,QTableWidgetItem(Send_To))
             self.SentList.setItem(x,2,QTableWidgetItem(time))
-            self.SentList.setItem(x, 3, QTableWidgetItem(NukeScript))
-            self.SentList.setItem(x, 4, QTableWidgetItem(Sent))
+            self.SentList.setItem(x,3,QTableWidgetItem(id))
 
 
     def pasteScript(self):
 
         if self.RL == True:
             row = self.ReceivedList.currentRow()
-            item = self.ReceivedList.item(row,3).text()
+            CurrentId = self.ReceivedList.item(row,3).text()
+            allItems = COLLECTION.find({'SenderName':username})
+            for x,i in enumerate(allItems):
+                id = str(i['_id'])
+                if id == str(CurrentId):
+                    item = i['script']
+                # QApplication.clipboard().setText(item)
+                # nuke.nodePaste('%clipboard%')
+
 
         else:
             row = self.SentList.currentRow()
-            item = self.SentList.item(row,3).text()
-
-
+            CurrentId = self.SentList.item(row,3).text()
+            allItems = COLLECTION.find({'SenderName':username})
+            for x,i in enumerate(allItems):
+                id = str(i['_id'])
+                if id == str(CurrentId):
+                    item = i['script']
         QApplication.clipboard().setText(item)
         nuke.nodePaste('%clipboard%')
 
@@ -176,6 +178,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         self.receivedScriptList()
         self.sentRecent()
+
 
 
 if __name__ == '__main__':
