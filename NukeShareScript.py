@@ -10,7 +10,8 @@ sys.path.append('F:/PYTHON/Python calculator/venv/Lib/site-packages')
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-import nuke
+from PySide2.QtUiTools import QUiLoader
+#import nuke
 import getpass,datetime,os
 import pymongo
 from mainUI import Ui_MainWindow
@@ -31,9 +32,11 @@ username = getpass.getuser()
 class MainWindow(QMainWindow,Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+
         self.setupUi(self)
         self.receivedScriptList()
         self.sentRecent()
+        self.autoDelete()
         self.show()
 
         self.ShareButton.clicked.connect(self.insertData)
@@ -92,7 +95,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.Sending_To = self.SenderName.currentText()
         nuke.nodeCopy("%clipboard%")
         script = QApplication.clipboard().text()
-        NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':now,'script':script}
+        NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':now,'script':script,'tmp':'Data'}
         COLLECTION.insert_one(NukeData)
 
 
@@ -173,10 +176,24 @@ class MainWindow(QMainWindow,Ui_MainWindow):
             return "%s hours(s) ago" % int(seconds/3600)
 
 
+    def autoDelete(self):
+
+
+        item = COLLECTION.find({})
+        for x,i in enumerate(item):
+            Document_Date = i['date']
+            diffence = datetime.datetime.now() - Document_Date
+            date = int(diffence.days)
+
+            if  date >= 2:
+                COLLECTION.delete_one(i)
+
+
     def refreshApp(self):
 
         self.receivedScriptList()
         self.sentRecent()
+        self.autoDelete()
 
 
 if __name__ == '__main__':
