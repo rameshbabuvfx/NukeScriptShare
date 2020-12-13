@@ -50,13 +50,13 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         self.ReceivedList.setHorizontalHeaderLabels(['Script-Name', 'Sender', 'Time   '])
         self.ReceivedList.setSelectionBehavior(QAbstractItemView.SelectRows)
-        #self.ReceivedList.hideColumn(3)
+        self.ReceivedList.hideColumn(3)
         self.ReceivedList.itemClicked.connect(self.clickedReceivedList)
 
 
         self.SentList.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
         self.SentList.setSelectionBehavior(QAbstractItemView.SelectRows)
-        #self.SentList.hideColumn(3)
+        self.SentList.hideColumn(3)
         self.SentList.itemClicked.connect(self.clickedSentList)
 
 
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         nukedata = COLLECTION.find({'Send_To':username}).sort('date',-1)
         self.ReceivedList.setRowCount(nukedata.count())
-        self.ReceivedList.setColumnCount(5)
+        self.ReceivedList.setColumnCount(4)
 
         for x,i in enumerate(nukedata):
 
@@ -119,7 +119,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         nukedata = COLLECTION.find({'SenderName':username}).sort('date',-1)
         self.SentList.setRowCount(nukedata.count())
-        self.SentList.setColumnCount(5)
+        self.SentList.setColumnCount(4)
 
         for x,i in enumerate(nukedata):
 
@@ -144,8 +144,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
                 id = str(i['_id'])
                 if id == str(CurrentId):
                     item = i['script']
-                # QApplication.clipboard().setText(item)
-                # nuke.nodePaste('%clipboard%')
 
 
         else:
@@ -156,6 +154,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
                 id = str(i['_id'])
                 if id == str(CurrentId):
                     item = i['script']
+
         QApplication.clipboard().setText(item)
         nuke.nodePaste('%clipboard%')
 
@@ -178,7 +177,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         self.receivedScriptList()
         self.sentRecent()
-
 
 
 if __name__ == '__main__':
