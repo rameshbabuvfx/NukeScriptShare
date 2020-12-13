@@ -22,10 +22,14 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setMinimumSize(QSize(550, 0))
         self.gridLayout = QGridLayout(self.centralwidget)
-        self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.frame = QFrame(self.centralwidget)
+        self.tabWidget = QTabWidget(self.centralwidget)
+        self.tabWidget.setObjectName(u"tabWidget")
+        self.tab_7 = QWidget()
+        self.tab_7.setObjectName(u"tab_7")
+        self.gridLayout_2 = QGridLayout(self.tab_7)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.frame = QFrame(self.tab_7)
         self.frame.setObjectName(u"frame")
         self.frame.setFrameShape(QFrame.NoFrame)
         self.frame.setFrameShadow(QFrame.Plain)
@@ -200,7 +204,14 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.frame_4)
 
 
-        self.gridLayout.addWidget(self.frame, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.frame, 0, 0, 1, 1)
+
+        self.tabWidget.addTab(self.tab_7, "")
+        self.tab_8 = QWidget()
+        self.tab_8.setObjectName(u"tab_8")
+        self.tabWidget.addTab(self.tab_8, "")
+
+        self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -216,5 +227,7 @@ class Ui_MainWindow(object):
         self.Sentlabel_2.setText(QCoreApplication.translate("MainWindow", u"SENT RECENTLY", None))
         self.Pastebutton.setText(QCoreApplication.translate("MainWindow", u"Paste", None))
         self.Refreshbutton.setText(QCoreApplication.translate("MainWindow", u"Refresh", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_7), QCoreApplication.translate("MainWindow", u"Tab 1", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_8), QCoreApplication.translate("MainWindow", u"Tab 2", None))
     # retranslateUi
 
