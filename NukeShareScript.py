@@ -193,7 +193,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         self.receivedScriptList()
         self.sentRecent()
-        self.autoDelete()
 
 
 if __name__ == '__main__':
