@@ -123,6 +123,13 @@ class Ui_MainWindow(object):
 
         self.ReceivedList = QTableWidget(self.frame_7)
         self.ReceivedList.setObjectName(u"ReceivedList")
+        self.ReceivedList.setAcceptDrops(False)
+        self.ReceivedList.setEditTriggers(QAbstractItemView.AnyKeyPressed)
+        self.ReceivedList.setDragEnabled(False)
+        self.ReceivedList.setDragDropOverwriteMode(True)
+        self.ReceivedList.setDragDropMode(QAbstractItemView.NoDragDrop)
+        self.ReceivedList.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.ReceivedList.setShowGrid(False)
 
         self.verticalLayout_2.addWidget(self.ReceivedList)
 
@@ -148,10 +155,13 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3.addWidget(self.SentNameEdit)
 
-        self.listWidget = QListWidget(self.frame_8)
-        self.listWidget.setObjectName(u"listWidget")
+        self.SentList = QTableWidget(self.frame_8)
+        self.SentList.setObjectName(u"SentList")
+        self.SentList.setEditTriggers(QAbstractItemView.AnyKeyPressed)
+        self.SentList.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.SentList.setShowGrid(False)
 
-        self.verticalLayout_3.addWidget(self.listWidget)
+        self.verticalLayout_3.addWidget(self.SentList)
 
 
         self.horizontalLayout_3.addWidget(self.frame_8)
