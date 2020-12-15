@@ -14,6 +14,7 @@ from PySide2.QtUiTools import QUiLoader
 #import nuke
 import getpass,datetime,os
 import pymongo
+from bson import ObjectId
 from mainUI import Ui_MainWindow
 
 
@@ -36,7 +37,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.setupUi(self)
         self.receivedScriptList()
         self.sentRecent()
-        self.autoDelete()
+        #self.autoDelete()
         self.show()
 
         self.ShareButton.clicked.connect(self.insertData)
@@ -55,7 +56,8 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.ReceivedList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ReceivedList.hideColumn(3)
         self.ReceivedList.itemClicked.connect(self.clickedReceivedList)
-
+        self.ReceivedList.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ReceivedList.customContextMenuRequested.connect(self.addFavourites)
 
         self.SentList.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
         self.SentList.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -187,6 +189,35 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
             if  date >= 2:
                 COLLECTION.delete_one(i)
+
+
+    def addFavourites(self,event):
+
+        menu = QMenu()
+        fav = menu.addAction('add fav')
+        action = menu.exec_(self.ReceivedList.mapToGlobal(event))
+        selectedRow = self.ReceivedList.currentRow()
+        item = self.ReceivedList.item(selectedRow,3).text()
+        collectId = COLLECTION.find_one({'_id':ObjectId(item)})
+        COLLECTION.update_one({'_id':collectId['_id']},{'$set':{'favourites': 'True'}})
+
+        favItems = COLLECTION.find({'favourites':'True'}).sort('date',-1)
+        print(favItems)
+        self.Fav_Table.setRowCount(favItems.count())
+
+        colcnt = self.Fav_Table.setColumnCount(4)
+
+        # for x,i in enumerate(favItems):
+        #
+        #     ScriptName = i['ScriptName']
+        #     Send_To = 'Sent-'+i['Send_To']
+        #     time = self.time_difference(i['date'])
+        #     id = str(i['_id'])
+        #
+        #     self.Fav_Table.setItem(x,0,QTableWidgetItem(ScriptName))
+        #     self.Fav_Table.setItem(x,1,QTableWidgetItem(Send_To))
+        #     self.Fav_Table.setItem(x,2,QTableWidgetItem(time))
+        #     self.Fav_Table.setItem(x,3,QTableWidgetItem(id))
 
 
     def refreshApp(self):
