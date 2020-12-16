@@ -125,19 +125,17 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         receivedlen = len(var['Received']) - 1
         receivedlen = 1 + receivedlen
 
-        COLLECTION.update_one({'user':Sending_To},{'$set':{'Received.{}'.format(receivedlen):{'Sender-name':username,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
-
-        # NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':now,'script':script,'tmp':'Data'}
-        # COLLECTION.insert_one(NukeData)
+        COLLECTION.update_one({'user':Sending_To},{'$set':{'Received.{}'.format(receivedlen):{'SenderName':username,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
 
 
     def receivedScriptList(self):
 
-        nukedata = COLLECTION.find({'Send_To':username}).sort('date',-1)
-        self.ReceivedList.setRowCount(nukedata.count())
+        nukedata = COLLECTION.find_one({'user':username})
+        reclen = len(nukedata['Received'])
+        self.ReceivedList.setRowCount(reclen)
         self.ReceivedList.setColumnCount(4)
 
-        for x,i in enumerate(nukedata):
+        for x,i in enumerate(nukedata['Received']):
 
             ScriptName = i['ScriptName']
             SenderName = i['SenderName']
@@ -152,14 +150,16 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
     def sentRecent(self):
 
-        nukedata = COLLECTION.find({'SenderName':username}).sort('date',-1)
-        self.SentList.setRowCount(nukedata.count())
+        nukedata = COLLECTION.find_one({'user':username})
+        sentlen = len(nukedata['Sent'])
+        self.SentList.setRowCount(sentlen)
         self.SentList.setColumnCount(4)
 
-        for x,i in enumerate(nukedata):
+        for x,i in enumerate(nukedata['Sent']):
 
             ScriptName = i['ScriptName']
-            Send_To = 'Sent-'+i['Send_To']
+            print(ScriptName)
+            Send_To = i['Send-To']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
 
@@ -174,21 +174,21 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         if self.RL == True:
             row = self.ReceivedList.currentRow()
             CurrentId = self.ReceivedList.item(row,3).text()
-            allItems = COLLECTION.find({'SenderName':username})
-            for x,i in enumerate(allItems):
-                id = str(i['_id'])
-                if id == str(CurrentId):
+            allItems = COLLECTION.find_one({'user':username},)
+            var = allItems['Received']
+            for i in var:
+                if CurrentId == str(i['_id']):
                     item = i['script']
-
 
         else:
             row = self.SentList.currentRow()
             CurrentId = self.SentList.item(row,3).text()
-            allItems = COLLECTION.find({'SenderName':username})
-            for x,i in enumerate(allItems):
-                id = str(i['_id'])
-                if id == str(CurrentId):
+            allItems = COLLECTION.find_one({'user':username},)
+            var = allItems['Sent']
+            for i in var:
+                if CurrentId == str(i['_id']):
                     item = i['script']
+
 
         QApplication.clipboard().setText(item)
         nuke.nodePaste('%clipboard%')
