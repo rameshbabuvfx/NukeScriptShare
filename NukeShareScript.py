@@ -25,7 +25,6 @@ DB = SERVER['NukeShare']
 COLLECTION = DB['NukeData']
 
 now = datetime.datetime.now()
-
 username = getpass.getuser()
 
 
@@ -37,12 +36,13 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.setupUi(self)
         self.receivedScriptList()
         self.sentRecent()
+        self.favList()
         #self.autoDelete()
         self.show()
 
         self.ShareButton.clicked.connect(self.insertData)
 
-        artistNames = ['kanna','Bunny','kiran','Bujji','DELL']
+        artistNames = ['Kanna','ramesh','bunny','alex','jack','DELL']
         self.completer = QCompleter(artistNames)
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.SenderName.addItems(artistNames)
@@ -63,7 +63,20 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.SentList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.SentList.hideColumn(3)
         self.SentList.itemClicked.connect(self.clickedSentList)
+        self.SentList.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.SentList.customContextMenuRequested.connect(self.addFavourites)
 
+        self.Fav_Table.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
+        self.Fav_Table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.Fav_Table.hideColumn(3)
+        self.Fav_Table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.Fav_Table.customContextMenuRequested.connect(self.removeFavourites)
+
+
+
+        self.Fav_Paste.clicked.connect(self.pasteScript)
+
+        self.Fav_delete.clicked.connect(self.deleteFav)
 
         self.ReceivedNameEdit.setText(username)
 
@@ -91,14 +104,31 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         NukeScriptName = nuke.root().knob('name').value()
         ScriptName = os.path.basename(NukeScriptName)
         if NukeScriptName == "":
-            ScriptName = 'From - '+username
+            ScriptName = 'untitled'
         else :
             pass
-        self.Sending_To = self.SenderName.currentText()
+        Sending_To = self.SenderName.currentText()
         nuke.nodeCopy("%clipboard%")
         script = QApplication.clipboard().text()
-        NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':now,'script':script,'tmp':'Data'}
-        COLLECTION.insert_one(NukeData)
+
+############# Inserting in Sent Username ############
+
+        var = COLLECTION.find_one({'user': username})
+        sentlen = len(var['Sent']) - 1
+        sentlen = 1 + sentlen
+
+        COLLECTION.update_one({'user':username},{'$set':{'Sent.{}'.format(sentlen):{'Send-To':Sending_To,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
+
+############### Inserting in Received Username ##########
+
+        var = COLLECTION.find_one({'user': Sending_To})
+        receivedlen = len(var['Received']) - 1
+        receivedlen = 1 + receivedlen
+
+        COLLECTION.update_one({'user':Sending_To},{'$set':{'Received.{}'.format(receivedlen):{'Sender-name':username,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
+
+        # NukeData = {'ScriptName':ScriptName, 'Send_To': self.Sending_To,'SenderName':username,'date':now,'script':script,'tmp':'Data'}
+        # COLLECTION.insert_one(NukeData)
 
 
     def receivedScriptList(self):
@@ -191,39 +221,64 @@ class MainWindow(QMainWindow,Ui_MainWindow):
                 COLLECTION.delete_one(i)
 
 
-    def addFavourites(self,event):
+    def addFavourites(self,pos):
 
         menu = QMenu()
         fav = menu.addAction('add fav')
-        action = menu.exec_(self.ReceivedList.mapToGlobal(event))
+        action = menu.exec_(self.ReceivedList.mapToGlobal(pos))
+
         selectedRow = self.ReceivedList.currentRow()
         item = self.ReceivedList.item(selectedRow,3).text()
         collectId = COLLECTION.find_one({'_id':ObjectId(item)})
         COLLECTION.update_one({'_id':collectId['_id']},{'$set':{'favourites': 'True'}})
 
+
+    def removeFavourites(self,pos):
+
+        menu = QMenu()
+        remfav = menu.addAction('RemoveFavourites')
+        action = menu.exec_(self.Fav_Table.mapToGlobal(pos))
+
+        Delrow = self.Fav_Table.currentRow()
+        self.Fav_Table.removeRow(int(Delrow))
+        self.favList()
+
+
+    def favList(self):
+
         favItems = COLLECTION.find({'favourites':'True'}).sort('date',-1)
-        print(favItems)
+
         self.Fav_Table.setRowCount(favItems.count())
 
         colcnt = self.Fav_Table.setColumnCount(4)
 
-        # for x,i in enumerate(favItems):
-        #
-        #     ScriptName = i['ScriptName']
-        #     Send_To = 'Sent-'+i['Send_To']
-        #     time = self.time_difference(i['date'])
-        #     id = str(i['_id'])
-        #
-        #     self.Fav_Table.setItem(x,0,QTableWidgetItem(ScriptName))
-        #     self.Fav_Table.setItem(x,1,QTableWidgetItem(Send_To))
-        #     self.Fav_Table.setItem(x,2,QTableWidgetItem(time))
-        #     self.Fav_Table.setItem(x,3,QTableWidgetItem(id))
+        for x,i in enumerate(favItems):
+
+            ScriptName = i['ScriptName']
+            Send_To = 'Sent-'+i['Send_To']
+            time = self.time_difference(i['date'])
+            id = str(i['_id'])
+
+            self.Fav_Table.setItem(x,0,QTableWidgetItem(ScriptName))
+            self.Fav_Table.setItem(x,1,QTableWidgetItem(Send_To))
+            self.Fav_Table.setItem(x,2,QTableWidgetItem(time))
+            self.Fav_Table.setItem(x,3,QTableWidgetItem(id))
+
+
+    def deleteFav(self):
+
+        selectedRow = self.Fav_Table.currentRow()
+        item = self.Fav_Table.item(selectedRow,3).text()
+        collectId = COLLECTION.find_one({'_id':ObjectId(item)})
+        COLLECTION.delete_one(collectId)
+        self.favList()
 
 
     def refreshApp(self):
 
         self.receivedScriptList()
         self.sentRecent()
+        self.favList()
 
 
 if __name__ == '__main__':
