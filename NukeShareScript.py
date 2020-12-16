@@ -11,7 +11,7 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtUiTools import QUiLoader
-#import nuke
+import nuke
 import getpass,datetime,os
 import pymongo
 from bson import ObjectId
@@ -35,8 +35,8 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         self.setupUi(self)
         self.receivedScriptList()
-        self.sentRecent()
-        self.favList()
+        self.sentRecentList()
+        self.FavouritesList()
         #self.autoDelete()
         self.show()
 
@@ -59,14 +59,14 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.ReceivedList.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ReceivedList.customContextMenuRequested.connect(self.addFavourites)
 
+
         self.SentList.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
         self.SentList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.SentList.hideColumn(3)
         self.SentList.itemClicked.connect(self.clickedSentList)
-        self.SentList.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.SentList.customContextMenuRequested.connect(self.addFavourites)
 
-        self.Fav_Table.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
+
+        self.Fav_Table.setHorizontalHeaderLabels(['Script-Name', 'Time   '])
         self.Fav_Table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.Fav_Table.hideColumn(3)
         self.Fav_Table.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -148,7 +148,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
             self.ReceivedList.setItem(x,3,QTableWidgetItem(id))
 
 
-    def sentRecent(self):
+    def sentRecentList(self):
 
         nukedata = COLLECTION.find_one({'user':username})
         sentlen = len(nukedata['Sent'])
@@ -158,7 +158,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         for x,i in enumerate(nukedata['Sent']):
 
             ScriptName = i['ScriptName']
-            print(ScriptName)
             Send_To = i['Send-To']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
@@ -167,6 +166,24 @@ class MainWindow(QMainWindow,Ui_MainWindow):
             self.SentList.setItem(x,1,QTableWidgetItem(Send_To))
             self.SentList.setItem(x,2,QTableWidgetItem(time))
             self.SentList.setItem(x,3,QTableWidgetItem(id))
+
+    def FavouritesList(self):
+
+        nukedata = COLLECTION.find_one({'user':username})
+        sentlen = len(nukedata['Favs'])
+        self.Fav_Table.setRowCount(sentlen)
+        self.Fav_Table.setColumnCount(4)
+
+        for x,i in enumerate(nukedata['Favs']):
+
+            ScriptName = i['ScriptName']
+            time = self.time_difference(i['date'])
+            id = str(i['_id'])
+
+            self.Fav_Table.setItem(x,0,QTableWidgetItem(ScriptName))
+            self.Fav_Table.setItem(x,2,QTableWidgetItem(time))
+            self.Fav_Table.setItem(x,3,QTableWidgetItem(id))
+
 
 
     def pasteScript(self):
@@ -210,7 +227,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
     def autoDelete(self):
 
-
         item = COLLECTION.find({})
         for x,i in enumerate(item):
             Document_Date = i['date']
@@ -221,16 +237,24 @@ class MainWindow(QMainWindow,Ui_MainWindow):
                 COLLECTION.delete_one(i)
 
 
+
     def addFavourites(self,pos):
 
         menu = QMenu()
         fav = menu.addAction('add fav')
         action = menu.exec_(self.ReceivedList.mapToGlobal(pos))
-
         selectedRow = self.ReceivedList.currentRow()
         item = self.ReceivedList.item(selectedRow,3).text()
-        collectId = COLLECTION.find_one({'_id':ObjectId(item)})
-        COLLECTION.update_one({'_id':collectId['_id']},{'$set':{'favourites': 'True'}})
+        recList = COLLECTION.find_one({'user':username})
+        recList = recList['Received']
+        for i in recList:
+            if i['_id']==ObjectId(item):
+                addFav = i
+
+        itemsList = COLLECTION.find_one({'user': username})
+        Favlen = len(itemsList['Favs']) - 1
+        Favlen = 1 + Favlen
+        COLLECTION.update_one({'user':username},{'$set':{'Favs.{}'.format(Favlen):addFav}})
 
 
     def removeFavourites(self,pos):
@@ -242,27 +266,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         Delrow = self.Fav_Table.currentRow()
         self.Fav_Table.removeRow(int(Delrow))
         self.favList()
-
-
-    def favList(self):
-
-        favItems = COLLECTION.find({'favourites':'True'}).sort('date',-1)
-
-        self.Fav_Table.setRowCount(favItems.count())
-
-        colcnt = self.Fav_Table.setColumnCount(4)
-
-        for x,i in enumerate(favItems):
-
-            ScriptName = i['ScriptName']
-            Send_To = 'Sent-'+i['Send_To']
-            time = self.time_difference(i['date'])
-            id = str(i['_id'])
-
-            self.Fav_Table.setItem(x,0,QTableWidgetItem(ScriptName))
-            self.Fav_Table.setItem(x,1,QTableWidgetItem(Send_To))
-            self.Fav_Table.setItem(x,2,QTableWidgetItem(time))
-            self.Fav_Table.setItem(x,3,QTableWidgetItem(id))
 
 
     def deleteFav(self):
@@ -277,8 +280,8 @@ class MainWindow(QMainWindow,Ui_MainWindow):
     def refreshApp(self):
 
         self.receivedScriptList()
-        self.sentRecent()
-        self.favList()
+        self.sentRecentList()
+        self.FavouritesList()
 
 
 if __name__ == '__main__':
