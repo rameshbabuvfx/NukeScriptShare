@@ -11,7 +11,7 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtUiTools import QUiLoader
-import nuke
+#import nuke
 import getpass,datetime,os
 import pymongo
 from bson import ObjectId
@@ -34,18 +34,20 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         super(MainWindow, self).__init__()
 
         self.setupUi(self)
+        self.createUser()
+        self.userList()
         self.receivedScriptList()
         self.sentRecentList()
         self.FavouritesList()
-        #self.autoDelete()
+        self.autoDelete()
         self.show()
 
         self.ShareButton.clicked.connect(self.insertData)
 
-        artistNames = ['Kanna','ramesh','bunny','alex','jack','DELL']
-        self.completer = QCompleter(artistNames)
+
+        self.completer = QCompleter(self.artistNames)
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
-        self.SenderName.addItems(artistNames)
+        self.SenderName.addItems(self.artistNames)
         self.SenderName.setEditable(True)
         self.SenderName.completer().setCompletionMode(QCompleter.PopupCompletion)
         self.SenderName.setInsertPolicy(QComboBox.NoInsert)
@@ -69,9 +71,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.Fav_Table.setHorizontalHeaderLabels(['Script-Name', 'Time   '])
         self.Fav_Table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.Fav_Table.hideColumn(3)
-        self.Fav_Table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.Fav_Table.customContextMenuRequested.connect(self.removeFavourites)
-
 
 
         self.Fav_Paste.clicked.connect(self.pasteScript)
@@ -99,6 +98,26 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.RL = False
 
 
+    def userList(self):
+
+        self.artistNames=[]
+        list = COLLECTION.find({})
+        for i in list:
+            users = i['user']
+            self.artistNames.append(users)
+
+
+    def createUser(self):
+
+        finduser = COLLECTION.find_one({'user':username})
+
+        if finduser== None:
+            data = COLLECTION.insert_one({'user': username, 'Sent':[], 'Received':[], 'Favs':[]})
+
+        else:
+            pass
+
+
     def insertData(self):
 
         NukeScriptName = nuke.root().knob('name').value()
@@ -111,7 +130,17 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         nuke.nodeCopy("%clipboard%")
         script = QApplication.clipboard().text()
 
-############# Inserting in Sent Username ############
+############ Creating sender databse ############
+
+        finduser = COLLECTION.find_one({'user': Sending_To})
+
+        if finduser == None:
+            data = COLLECTION.insert_one({'user': Sending_To, 'Sent': [], 'Received': [], 'Favs': []})
+
+        else:
+            pass
+
+############# Inserting in SentList ############
 
         var = COLLECTION.find_one({'user': username})
         sentlen = len(var['Sent']) - 1
@@ -119,7 +148,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         COLLECTION.update_one({'user':username},{'$set':{'Sent.{}'.format(sentlen):{'Send-To':Sending_To,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
 
-############### Inserting in Received Username ##########
+############### Inserting in Received List ##########
 
         var = COLLECTION.find_one({'user': Sending_To})
         receivedlen = len(var['Received']) - 1
@@ -127,6 +156,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
         COLLECTION.update_one({'user':Sending_To},{'$set':{'Received.{}'.format(receivedlen):{'SenderName':username,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
 
+        self.refreshApp()
 
     def receivedScriptList(self):
 
@@ -225,19 +255,6 @@ class MainWindow(QMainWindow,Ui_MainWindow):
             return "%s hours(s) ago" % int(seconds/3600)
 
 
-    def autoDelete(self):
-
-        item = COLLECTION.find({})
-        for x,i in enumerate(item):
-            Document_Date = i['date']
-            diffence = datetime.datetime.now() - Document_Date
-            date = int(diffence.days)
-
-            if  date >= 2:
-                COLLECTION.delete_one(i)
-
-
-
     def addFavourites(self,pos):
 
         menu = QMenu()
@@ -255,26 +272,44 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         Favlen = len(itemsList['Favs']) - 1
         Favlen = 1 + Favlen
         COLLECTION.update_one({'user':username},{'$set':{'Favs.{}'.format(Favlen):addFav}})
+        self.refreshApp()
 
 
-    def removeFavourites(self,pos):
+    def autoDelete(self):
 
-        menu = QMenu()
-        remfav = menu.addAction('RemoveFavourites')
-        action = menu.exec_(self.Fav_Table.mapToGlobal(pos))
+        item = COLLECTION.find({})
+        for x,i in enumerate(item):
+            for n in i['Sent']:
+                Document_Date = n['date']
+                diffence = datetime.datetime.now() - Document_Date
+                date = int(diffence.days)
+                if  date >= 2:
+                    id = n['_id']
+                    if id:
+                        COLLECTION.update_one({}, {'$pull': {'Sent': n}})
 
-        Delrow = self.Fav_Table.currentRow()
-        self.Fav_Table.removeRow(int(Delrow))
-        self.favList()
+            for n in i['Received']:
+                Document_Date = n['date']
+                diffence = datetime.datetime.now() - Document_Date
+                date = int(diffence.days)
+                if  date >= 2:
+                    id = n['_id']
+                    if id:
+                        COLLECTION.update_one({}, {'$pull': {'Received': n}})
 
 
     def deleteFav(self):
 
         selectedRow = self.Fav_Table.currentRow()
         item = self.Fav_Table.item(selectedRow,3).text()
-        collectId = COLLECTION.find_one({'_id':ObjectId(item)})
-        COLLECTION.delete_one(collectId)
-        self.favList()
+        collectdoc = COLLECTION.find_one({'user':username})
+        collectdoc = collectdoc['Favs']
+        for i in collectdoc:
+            id = i['_id']
+            if id == ObjectId(item):
+                COLLECTION.update_one({'user':username},{'$pull':{'Favs':i}})
+
+        self.refreshApp()
 
 
     def refreshApp(self):
