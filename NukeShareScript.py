@@ -1,261 +1,217 @@
-'''
-SCRIPT AUTHOR : RAMESHKANNA
-
-'''
 import sys
-
 sys.path.append('F:/PYTHON/Python calculator/venv/Lib/site-packages')
-
+import nuke
+import getpass
+import datetime
+import os
+import pymongo
+from bson import ObjectId
+from mainUI import Ui_MainWindow
 
 try:
     from PySide2.QtWidgets import *
     from PySide2.QtCore import *
     from PySide2.QtGui import *
-    from PySide2.QtUiTools import QUiLoader
 except:
     from PySide.QtCore import *
     from PySide.QtGui import *
-    from PySide.QtUiTools import QUiLoader
 
-
-import nuke
-import getpass,datetime,os
-import pymongo
-from bson import ObjectId
-
-
-#####   Connecting Mongodb server    #######
-
-SERVER = pymongo.MongoClient('localhost',27017)
+SERVER = pymongo.MongoClient('localhost', 27017)
 DB = SERVER['NukeShare']
 COLLECTION = DB['NukeData']
-
 now = datetime.datetime.now()
 username = getpass.getuser()
 
 
-
-
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-
-        #### load Ui ###
-
-        loader = QUiLoader()
-        self.window = loader.load("ShareScriptUI.ui")
-
-
-
-        self.createUser()
-        self.userList()
-        self.receivedScriptList()
-        self.sentRecentList()
-        self.FavouritesList()
-        self.autoDelete()
-        self.window.show()
-
-        self.window.ShareButton.clicked.connect(self.insertData)
-
-
+        self.setupUi(self)
+        self.create_user()
+        self.auto_delete()
+        # self.userList()
+        self.received_script_list()
+        self.sent_recent_list()
+        self.favourites_list()
+        self.show()
+        self.ShareButton.clicked.connect(self.insert_data)
+        self.artistNames = ['Alex', 'Jack', 'HP', 'DELL', 'Ramesh']
         self.completer = QCompleter(self.artistNames)
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)
-        self.window.SenderName.addItems(self.artistNames)
-        self.window.SenderName.setEditable(True)
-        self.window.SenderName.completer().setCompletionMode(QCompleter.PopupCompletion)
-        self.window.SenderName.setInsertPolicy(QComboBox.NoInsert)
-        self.window.SenderName.setCompleter(self.completer)
+        self.SenderName.addItems(self.artistNames)
+        self.SenderName.setEditable(True)
+        self.SenderName.completer().setCompletionMode(QCompleter.PopupCompletion)
+        self.SenderName.setInsertPolicy(QComboBox.NoInsert)
+        self.SenderName.setCompleter(self.completer)
 
+        self.ReceivedList.setHorizontalHeaderLabels(['Script-Name', 'Sender', 'Time   '])
+        self.ReceivedList.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ReceivedList.hideColumn(3)
+        self.ReceivedList.itemClicked.connect(self.clicked_received_list)
+        self.ReceivedList.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ReceivedList.customContextMenuRequested.connect(self.add_favourites)
 
-        self.window.ReceivedList.setHorizontalHeaderLabels(['Script-Name', 'Sender', 'Time   '])
-        self.window.ReceivedList.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.window.ReceivedList.hideColumn(3)
-        self.window.ReceivedList.itemClicked.connect(self.clickedReceivedList)
-        self.window.ReceivedList.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.window.ReceivedList.customContextMenuRequested.connect(self.addFavourites)
+        self.SentList.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
+        self.SentList.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.SentList.hideColumn(3)
+        self.SentList.itemClicked.connect(self.clicked_sent_list)
 
+        self.Fav_Table.setHorizontalHeaderLabels(['Script-Name', 'Time  '])
+        self.Fav_Table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.Fav_Table.hideColumn(2)
 
-        self.window.SentList.setHorizontalHeaderLabels(['Script-Name', 'Sent-To', 'Time   '])
-        self.window.SentList.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.window.SentList.hideColumn(3)
-        self.window.SentList.itemClicked.connect(self.clickedSentList)
+        self.Fav_Paste.clicked.connect(self.paste_fav)
+        self.Fav_delete.clicked.connect(self.delete_fav)
+        self.Pastebutton.clicked.connect(self.paste_script)
+        self.Refreshbutton.clicked.connect(self.refresh_app)
 
-
-        self.window.Fav_Table.setHorizontalHeaderLabels(['Script-Name', 'Time   '])
-        self.window.Fav_Table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.window.Fav_Table.hideColumn(3)
-
-
-        self.window.Fav_Paste.clicked.connect(self.pasteScript)
-
-        self.window.Fav_delete.clicked.connect(self.deleteFav)
-
-        self.window.ReceivedNameEdit.setText(username)
-
-        self.window.SentNameEdit.setText(username)
-
-        self.window.Pastebutton.clicked.connect(self.pasteScript)
-
-        self.window.Refreshbutton.clicked.connect(self.refreshApp)
-
-
-    def clickedReceivedList(self):
-
-        self.window.SentList.clearSelection()
+    def clicked_received_list(self):
+        self.SentList.clearSelection()
         self.RL = True
 
-
-    def clickedSentList(self):
-
-        self.window.ReceivedList.clearSelection()
+    def clicked_sent_list(self):
+        self.ReceivedList.clearSelection()
         self.RL = False
 
+    # def userList(self):
+    #
+    #     self.artistNames=[]
+    #     list = COLLECTION.find({})
+    #     for i in list:
+    #         users = i['user']
+    #         self.artistNames.append(users)
 
-    def userList(self):
-
-        self.artistNames=[]
-        list = COLLECTION.find({})
-        for i in list:
-            users = i['user']
-            self.artistNames.append(users)
-
-
-    def createUser(self):
-
-        finduser = COLLECTION.find_one({'user':username})
-
-        if finduser== None:
-            data = COLLECTION.insert_one({'user': username, 'Sent':[], 'Received':[], 'Favs':[]})
-
-        else:
-            pass
-
-
-    def insertData(self):
-
-        NukeScriptName = nuke.root().knob('name').value()
-        ScriptName = os.path.basename(NukeScriptName)
-        if NukeScriptName == "":
-            ScriptName = 'untitled'
-        else :
-            pass
-        Sending_To = self.window.SenderName.currentText()
-        nuke.nodeCopy("%clipboard%")
-        script = QApplication.clipboard().text()
-
-############ Creating sender databse ############
-
-        finduser = COLLECTION.find_one({'user': Sending_To})
-
+    def create_user(self):
+        finduser = COLLECTION.find_one({'user': username})
         if finduser == None:
-            data = COLLECTION.insert_one({'user': Sending_To, 'Sent': [], 'Received': [], 'Favs': []})
-
+            data = COLLECTION.insert_one({'user': username, 'Sent': [], 'Received': [], 'Favs': []})
         else:
             pass
 
-############# Inserting in window.SentList ############
+    def insert_data(self):
+        nuke_script_name = nuke.root().knob('name').value()
+        script_name = os.path.basename(nuke_script_name)
+        if nuke_script_name == "":
+            nuke.message("Save the WorkFile before sharing")
+        else:
+            sending_to = self.SenderName.currentText()
+            nuke.nodeCopy("%clipboard%")
+            script = QApplication.clipboard().text()
 
-        var = COLLECTION.find_one({'user': username})
-        sentlen = len(var['Sent']) - 1
-        sentlen = 1 + sentlen
+            ############ Creating sender databse ############
+            finduser = COLLECTION.find_one({'user': sending_to})
+            if finduser == None:
+                data = COLLECTION.insert_one({'user': sending_to, 'Sent': [], 'Received': [], 'Favs': []})
+            else:
+                pass
 
-        COLLECTION.update_one({'user':username},{'$set':{'Sent.{}'.format(sentlen):{'Send-To':Sending_To,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
+            ############# Inserting in SentList ############
 
-############### Inserting in Received List ##########
+            var = COLLECTION.find_one({'user': username})
+            sentlen = len(var['Sent']) - 1
+            sentlen = 1 + sentlen
+            COLLECTION.update_one({'user': username}, {'$set': {
+                'Sent.{}'.format(sentlen): {'Send-To': sending_to,
+                                            'ScriptName': script_name, 'script':
+                                                script, 'date': now, '_id': ObjectId()}}})
 
-        var = COLLECTION.find_one({'user': Sending_To})
-        receivedlen = len(var['Received']) - 1
-        receivedlen = 1 + receivedlen
+            ############### Inserting in Received List ##########
+            var = COLLECTION.find_one({'user': sending_to})
+            receivedlen = len(var['Received']) - 1
+            receivedlen = 1 + receivedlen
 
-        COLLECTION.update_one({'user':Sending_To},{'$set':{'Received.{}'.format(receivedlen):{'window.SenderName':username,'ScriptName':ScriptName,'script':script,'date':now,'_id':ObjectId()}}})
+            COLLECTION.update_one({'user': sending_to}, {'$set': {
+                'Received.{}'.format(receivedlen): {
+                    'SenderName': username, 'ScriptName': script_name,
+                    'script': script,'date': now, '_id': ObjectId()}}})
 
-        self.refreshApp()
+        self.refresh_app()
 
-    def receivedScriptList(self):
-
-        nukedata = COLLECTION.find_one({'user':username})
+    def received_script_list(self):
+        nukedata = COLLECTION.find_one({'user': username})
         reclen = len(nukedata['Received'])
-        self.window.ReceivedList.setRowCount(reclen)
-        self.window.ReceivedList.setColumnCount(4)
+        self.ReceivedList.setRowCount(reclen)
+        self.ReceivedList.setColumnCount(4)
 
-        for x,i in enumerate(nukedata['Received']):
-
+        for x, i in enumerate(nukedata['Received']):
             ScriptName = i['ScriptName']
             SenderName = i['SenderName']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
 
-            self.window.ReceivedList.setItem(x,0,QTableWidgetItem(ScriptName))
-            self.window.ReceivedList.setItem(x,1,QTableWidgetItem(SenderName))
-            self.window.ReceivedList.setItem(x,2,QTableWidgetItem(time))
-            self.window.ReceivedList.setItem(x,3,QTableWidgetItem(id))
+            self.ReceivedList.setItem(x, 0, QTableWidgetItem(ScriptName))
+            self.ReceivedList.setItem(x, 1, QTableWidgetItem(SenderName))
+            self.ReceivedList.setItem(x, 2, QTableWidgetItem(time))
+            self.ReceivedList.setItem(x, 3, QTableWidgetItem(id))
 
-
-    def sentRecentList(self):
-
-        nukedata = COLLECTION.find_one({'user':username})
+    def sent_recent_list(self):
+        nukedata = COLLECTION.find_one({'user': username})
         sentlen = len(nukedata['Sent'])
-        self.window.SentList.setRowCount(sentlen)
-        self.window.SentList.setColumnCount(4)
+        self.SentList.setRowCount(sentlen)
+        self.SentList.setColumnCount(4)
 
-        for x,i in enumerate(nukedata['Sent']):
-
+        for x, i in enumerate(nukedata['Sent']):
             ScriptName = i['ScriptName']
             Send_To = i['Send-To']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
+            self.SentList.setItem(x, 0, QTableWidgetItem(ScriptName))
+            self.SentList.setItem(x, 1, QTableWidgetItem(Send_To))
+            self.SentList.setItem(x, 2, QTableWidgetItem(time))
+            self.SentList.setItem(x, 3, QTableWidgetItem(id))
 
-            self.window.SentList.setItem(x,0,QTableWidgetItem(ScriptName))
-            self.window.SentList.setItem(x,1,QTableWidgetItem(Send_To))
-            self.window.SentList.setItem(x,2,QTableWidgetItem(time))
-            self.window.SentList.setItem(x,3,QTableWidgetItem(id))
-
-    def FavouritesList(self):
-
-        nukedata = COLLECTION.find_one({'user':username})
+    def favourites_list(self):
+        nukedata = COLLECTION.find_one({'user': username})
         sentlen = len(nukedata['Favs'])
-        self.window.Fav_Table.setRowCount(sentlen)
-        self.window.Fav_Table.setColumnCount(4)
+        self.Fav_Table.setRowCount(sentlen)
+        self.Fav_Table.setColumnCount(3)
 
-        for x,i in enumerate(nukedata['Favs']):
-
+        for x, i in enumerate(nukedata['Favs']):
             ScriptName = i['ScriptName']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
+            self.Fav_Table.setItem(x, 0, QTableWidgetItem(ScriptName))
+            self.Fav_Table.setItem(x, 1, QTableWidgetItem(time))
+            self.Fav_Table.setItem(x, 2, QTableWidgetItem(id))
 
-            self.window.Fav_Table.setItem(x,0,QTableWidgetItem(ScriptName))
-            self.window.Fav_Table.setItem(x,2,QTableWidgetItem(time))
-            self.window.Fav_Table.setItem(x,3,QTableWidgetItem(id))
-
-
-
-    def pasteScript(self):
-
-        if self.RL == True:
-            row = self.window.ReceivedList.currentRow()
-            CurrentId = self.window.ReceivedList.item(row,3).text()
-            allItems = COLLECTION.find_one({'user':username},)
-            var = allItems['Received']
+    def paste_script(self):
+        item = None
+        if self.RL:
+            row = self.ReceivedList.currentRow()
+            currentid = self.ReceivedList.item(row, 3).text()
+            all_items = COLLECTION.find_one({'user': username}, )
+            var = all_items['Received']
             for i in var:
-                if CurrentId == str(i['_id']):
+                if currentid == str(i['_id']):
                     item = i['script']
 
-        else:
-            row = self.window.SentList.currentRow()
-            CurrentId = self.window.SentList.item(row,3).text()
-            allItems = COLLECTION.find_one({'user':username},)
-            var = allItems['Sent']
+        elif not self.RL:
+            row = self.SentList.currentRow()
+            currentid = self.SentList.item(row, 2).text()
+            all_items = COLLECTION.find_one({'user': username}, )
+            var = all_items['Sent']
             for i in var:
-                if CurrentId == str(i['_id']):
+                if currentid == str(i['_id']):
                     item = i['script']
-
 
         QApplication.clipboard().setText(item)
         nuke.nodePaste('%clipboard%')
 
+    def paste_fav(self):
+        item = None
+        row = self.Fav_Table.currentRow()
+        current_id = self.Fav_Table.item(row, 2).text()
+        print(current_id)
+        all_items = COLLECTION.find_one({'user': username}, )
+        var = all_items['Favs']
+        for i in var:
+            if current_id == str(i['_id']):
+                item = i['script']
 
-    def time_difference(self, date):
+        QApplication.clipboard().setText(item)
+        nuke.nodePaste('%clipboard%')
 
+    def time_difference(self,date):
         delta = datetime.datetime.today() - date
         if delta.days:
             return "%s day(s)" % delta.days
@@ -263,77 +219,67 @@ class MainWindow(QMainWindow):
         if seconds < 60:
             return "A few seconds ago"
         elif seconds < 3600:
-            return "%s minute(s) ago" % int(seconds/60)
+            return "%s minute(s) ago" % int(seconds / 60)
         elif seconds < 86400:
-            return "%s hours(s) ago" % int(seconds/3600)
+            return "%s hours(s) ago" % int(seconds / 3600)
 
-
-    def addFavourites(self,pos):
-
+    def add_favourites(self, pos):
+        add_fav = None
         menu = QMenu()
         fav = menu.addAction('add fav')
-        action = menu.exec_(self.window.ReceivedList.mapToGlobal(pos))
-        selectedRow = self.window.ReceivedList.currentRow()
-        item = self.window.ReceivedList.item(selectedRow,3).text()
-        recList = COLLECTION.find_one({'user':username})
-        recList = recList['Received']
-        for i in recList:
-            if i['_id']==ObjectId(item):
-                addFav = i
+        action = menu.exec_(self.ReceivedList.mapToGlobal(pos))
+        selected_row = self.ReceivedList.currentRow()
+        item = self.ReceivedList.item(selected_row, 3).text()
+        rec_list = COLLECTION.find_one({'user': username})
+        rec_list = rec_list['Received']
+        for i in rec_list:
+            if i['_id'] == ObjectId(item):
+                add_fav = i
 
-        itemsList = COLLECTION.find_one({'user': username})
-        Favlen = len(itemsList['Favs']) - 1
-        Favlen = 1 + Favlen
-        COLLECTION.update_one({'user':username},{'$set':{'Favs.{}'.format(Favlen):addFav}})
-        self.refreshApp()
+        items_list = COLLECTION.find_one({'user': username})
+        favlen = len(items_list['Favs']) - 1
+        favlen = 1 + favlen
+        COLLECTION.update_one({'user': username}, {'$set': {'Favs.{}'.format(favlen): add_fav}})
+        self.refresh_app()
 
-
-    def autoDelete(self):
-
+    def auto_delete(self):
         item = COLLECTION.find({})
-        for x,i in enumerate(item):
+        for x, i in enumerate(item):
             for n in i['Sent']:
-                Document_Date = n['date']
-                diffence = datetime.datetime.now() - Document_Date
+                document_date = n['date']
+                diffence = datetime.datetime.now() - document_date
                 date = int(diffence.days)
-                if  date >= 2:
+                if date >= 2:
                     id = n['_id']
                     if id:
                         COLLECTION.update_one({}, {'$pull': {'Sent': n}})
 
             for n in i['Received']:
-                Document_Date = n['date']
-                diffence = datetime.datetime.now() - Document_Date
+                document_date = n['date']
+                diffence = datetime.datetime.now() - document_date
                 date = int(diffence.days)
-                if  date >= 2:
+                if date >= 2:
                     id = n['_id']
                     if id:
                         COLLECTION.update_one({}, {'$pull': {'Received': n}})
 
-
-    def deleteFav(self):
-
-        selectedRow = self.window.Fav_Table.currentRow()
-        item = self.window.Fav_Table.item(selectedRow,3).text()
-        collectdoc = COLLECTION.find_one({'user':username})
+    def delete_fav(self):
+        selected_row = self.Fav_Table.currentRow()
+        item = self.Fav_Table.item(selected_row, 2).text()
+        collectdoc = COLLECTION.find_one({'user': username})
         collectdoc = collectdoc['Favs']
         for i in collectdoc:
             id = i['_id']
             if id == ObjectId(item):
-                COLLECTION.update_one({'user':username},{'$pull':{'Favs':i}})
+                COLLECTION.update_one({'user': username}, {'$pull': {'Favs': i}})
 
-        self.refreshApp()
+        self.refresh_app()
 
-
-    def refreshApp(self):
-
-        self.receivedScriptList()
-        self.sentRecentList()
-        self.FavouritesList()
+    def refresh_app(self):
+        self.received_script_list()
+        self.sent_recent_list()
+        self.favourites_list()
 
 
-if __name__ == '__main__':
-
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    sys.exit(app.exec_())
+def main():
+    main.window = MainWindow()

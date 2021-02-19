@@ -25,11 +25,18 @@ class Ui_MainWindow(object):
         self.gridLayout.setObjectName(u"gridLayout")
         self.tabWidget = QTabWidget(self.centralwidget)
         self.tabWidget.setObjectName(u"tabWidget")
-        self.tab_7 = QWidget()
-        self.tab_7.setObjectName(u"tab_7")
-        self.gridLayout_2 = QGridLayout(self.tab_7)
+        self.tabWidget.setTabPosition(QTabWidget.North)
+        self.tabWidget.setTabShape(QTabWidget.Triangular)
+        self.tabWidget.setElideMode(Qt.ElideLeft)
+        self.tabWidget.setMovable(True)
+        self.tabWidget.setTabBarAutoHide(False)
+        self.Share_Tab = QWidget()
+        self.Share_Tab.setObjectName(u"Share_Tab")
+        self.gridLayout_2 = QGridLayout(self.Share_Tab)
+        self.gridLayout_2.setSpacing(0)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.frame = QFrame(self.tab_7)
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.frame = QFrame(self.Share_Tab)
         self.frame.setObjectName(u"frame")
         self.frame.setFrameShape(QFrame.NoFrame)
         self.frame.setFrameShadow(QFrame.Plain)
@@ -40,7 +47,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.frame_2 = QFrame(self.frame)
         self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setMinimumSize(QSize(500, 100))
+        self.frame_2.setMinimumSize(QSize(500, 71))
         self.frame_2.setMaximumSize(QSize(16777215, 120))
         self.frame_2.setFrameShape(QFrame.NoFrame)
         self.frame_2.setFrameShadow(QFrame.Plain)
@@ -66,6 +73,7 @@ class Ui_MainWindow(object):
         self.ShareButton = QPushButton(self.frame_2)
         self.ShareButton.setObjectName(u"ShareButton")
         self.ShareButton.setMinimumSize(QSize(111, 0))
+        self.ShareButton.setMaximumSize(QSize(200, 16777215))
 
         self.horizontalLayout_5.addWidget(self.ShareButton)
 
@@ -75,6 +83,31 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout.addWidget(self.frame_2)
+
+        self.frame_13 = QFrame(self.frame)
+        self.frame_13.setObjectName(u"frame_13")
+        self.frame_13.setMinimumSize(QSize(0, 51))
+        self.frame_13.setFrameShape(QFrame.StyledPanel)
+        self.frame_13.setFrameShadow(QFrame.Raised)
+        self.gridLayout_6 = QGridLayout(self.frame_13)
+        self.gridLayout_6.setSpacing(0)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_6.setContentsMargins(0, 9, 0, 9)
+        self.label_2 = QLabel(self.frame_13)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(0, 64))
+        font = QFont()
+        font.setFamily(u"Calibri")
+        font.setPointSize(10)
+        font.setItalic(True)
+        self.label_2.setFont(font)
+        self.label_2.setStyleSheet(u"background-color: rgb(37, 37, 37);")
+        self.label_2.setLineWidth(0)
+
+        self.gridLayout_6.addWidget(self.label_2, 0, 0, 1, 1)
+
+
+        self.verticalLayout.addWidget(self.frame_13)
 
         self.frame_3 = QFrame(self.frame)
         self.frame_3.setObjectName(u"frame_3")
@@ -120,18 +153,14 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.Receivedlabel)
 
-        self.ReceivedNameEdit = QLineEdit(self.frame_7)
-        self.ReceivedNameEdit.setObjectName(u"ReceivedNameEdit")
-
-        self.verticalLayout_2.addWidget(self.ReceivedNameEdit)
-
         self.ReceivedList = QTableWidget(self.frame_7)
         self.ReceivedList.setObjectName(u"ReceivedList")
+        self.ReceivedList.setContextMenuPolicy(Qt.DefaultContextMenu)
         self.ReceivedList.setAcceptDrops(False)
         self.ReceivedList.setEditTriggers(QAbstractItemView.AnyKeyPressed)
-        self.ReceivedList.setDragEnabled(False)
+        self.ReceivedList.setDragEnabled(True)
         self.ReceivedList.setDragDropOverwriteMode(True)
-        self.ReceivedList.setDragDropMode(QAbstractItemView.NoDragDrop)
+        self.ReceivedList.setDragDropMode(QAbstractItemView.DragOnly)
         self.ReceivedList.setSelectionMode(QAbstractItemView.SingleSelection)
         self.ReceivedList.setShowGrid(False)
 
@@ -153,11 +182,6 @@ class Ui_MainWindow(object):
         self.Sentlabel_2.setObjectName(u"Sentlabel_2")
 
         self.verticalLayout_3.addWidget(self.Sentlabel_2)
-
-        self.SentNameEdit = QLineEdit(self.frame_8)
-        self.SentNameEdit.setObjectName(u"SentNameEdit")
-
-        self.verticalLayout_3.addWidget(self.SentNameEdit)
 
         self.SentList = QTableWidget(self.frame_8)
         self.SentList.setObjectName(u"SentList")
@@ -206,10 +230,92 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.frame, 0, 0, 1, 1)
 
-        self.tabWidget.addTab(self.tab_7, "")
-        self.tab_8 = QWidget()
-        self.tab_8.setObjectName(u"tab_8")
-        self.tabWidget.addTab(self.tab_8, "")
+        self.tabWidget.addTab(self.Share_Tab, "")
+        self.Fav_tab = QWidget()
+        self.Fav_tab.setObjectName(u"Fav_tab")
+        self.gridLayout_3 = QGridLayout(self.Fav_tab)
+        self.gridLayout_3.setSpacing(0)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.frame_9 = QFrame(self.Fav_tab)
+        self.frame_9.setObjectName(u"frame_9")
+        self.frame_9.setFrameShape(QFrame.StyledPanel)
+        self.frame_9.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_4 = QVBoxLayout(self.frame_9)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.frame_12 = QFrame(self.frame_9)
+        self.frame_12.setObjectName(u"frame_12")
+        self.frame_12.setMinimumSize(QSize(0, 100))
+        self.frame_12.setFrameShape(QFrame.StyledPanel)
+        self.frame_12.setFrameShadow(QFrame.Raised)
+        self.gridLayout_5 = QGridLayout(self.frame_12)
+        self.gridLayout_5.setSpacing(0)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.label = QLabel(self.frame_12)
+        self.label.setObjectName(u"label")
+        font1 = QFont()
+        font1.setFamily(u"Calibri")
+        font1.setPointSize(10)
+        font1.setBold(False)
+        font1.setItalic(True)
+        font1.setWeight(50)
+        self.label.setFont(font1)
+        self.label.setStyleSheet(u"background-color: rgb(37, 37, 37);")
+
+        self.gridLayout_5.addWidget(self.label, 0, 0, 1, 1)
+
+
+        self.verticalLayout_4.addWidget(self.frame_12)
+
+        self.frame_11 = QFrame(self.frame_9)
+        self.frame_11.setObjectName(u"frame_11")
+        self.frame_11.setFrameShape(QFrame.StyledPanel)
+        self.frame_11.setFrameShadow(QFrame.Raised)
+        self.gridLayout_4 = QGridLayout(self.frame_11)
+        self.gridLayout_4.setSpacing(0)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.Fav_Table = QTableWidget(self.frame_11)
+        self.Fav_Table.setObjectName(u"Fav_Table")
+        font2 = QFont()
+        font2.setPointSize(10)
+        self.Fav_Table.setFont(font2)
+        self.Fav_Table.setEditTriggers(QAbstractItemView.AnyKeyPressed)
+        self.Fav_Table.setShowGrid(False)
+
+        self.gridLayout_4.addWidget(self.Fav_Table, 1, 0, 1, 1)
+
+        self.frame_10 = QFrame(self.frame_11)
+        self.frame_10.setObjectName(u"frame_10")
+        self.frame_10.setMinimumSize(QSize(0, 100))
+        self.frame_10.setMaximumSize(QSize(16777215, 100))
+        self.frame_10.setFrameShape(QFrame.StyledPanel)
+        self.frame_10.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_6 = QHBoxLayout(self.frame_10)
+        self.horizontalLayout_6.setSpacing(0)
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.Fav_Paste = QPushButton(self.frame_10)
+        self.Fav_Paste.setObjectName(u"Fav_Paste")
+
+        self.horizontalLayout_6.addWidget(self.Fav_Paste)
+
+        self.Fav_delete = QPushButton(self.frame_10)
+        self.Fav_delete.setObjectName(u"Fav_delete")
+
+        self.horizontalLayout_6.addWidget(self.Fav_delete)
+
+
+        self.gridLayout_4.addWidget(self.frame_10, 2, 0, 1, 1)
+
+
+        self.verticalLayout_4.addWidget(self.frame_11)
+
+
+        self.gridLayout_3.addWidget(self.frame_9, 0, 0, 1, 1)
+
+        self.tabWidget.addTab(self.Fav_tab, "")
 
         self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 1)
 
@@ -217,17 +323,27 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
+        self.tabWidget.setCurrentIndex(0)
+
+
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.ShareButton.setText(QCoreApplication.translate("MainWindow", u"Share", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Caution :  Sent and received scripts are Storing in temporary Database,\n"
+"                  So the scripts are Automatically delete after Two days, \n"
+"                  If you want to store perminantly Right-click on the row and click on add to Favourites", None))
         self.Receivedlabel.setText(QCoreApplication.translate("MainWindow", u"RECEIVED", None))
         self.Sentlabel_2.setText(QCoreApplication.translate("MainWindow", u"SENT RECENTLY", None))
         self.Pastebutton.setText(QCoreApplication.translate("MainWindow", u"Paste", None))
         self.Refreshbutton.setText(QCoreApplication.translate("MainWindow", u"Refresh", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_7), QCoreApplication.translate("MainWindow", u"Tab 1", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_8), QCoreApplication.translate("MainWindow", u"Tab 2", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Share_Tab), QCoreApplication.translate("MainWindow", u"Script-Share", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Favourite scripts are permanent scripts.\n"
+" You can  DELETE the scripts from database by using the DELETE button in the below of panel", None))
+        self.Fav_Paste.setText(QCoreApplication.translate("MainWindow", u"Paste", None))
+        self.Fav_delete.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.Fav_tab), QCoreApplication.translate("MainWindow", u"Favourites", None))
     # retranslateUi
 

@@ -1,7 +1,15 @@
-from NukeShareScript import MainWindow
 import nuke
+import sys
 from nukescripts import panels
 
-#nukescripts.registerWidgetAsPanel('MainWindow','NukeShare','uk.co.thefoundry.MainWindow',True)
+rk_menu = nuke.toolbar("Nuke")
+RK_menu = rk_menu.addMenu('RK_Menu')
+RK_menu.addCommand('Nukesharescript', 'share_script()')
 
-panels.registerWidgetAsPanel('MainWindow', 'NukeShare', 'uk.co.thefoundry.MainWindow',True)
+
+def share_script():
+    try:
+        del sys.modules['NukeShareScript']
+    except:
+        import NukeShareScript
+        NukeShareScript.main()
