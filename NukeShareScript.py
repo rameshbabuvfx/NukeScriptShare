@@ -1,5 +1,4 @@
 import sys
-sys.path.append('F:/PYTHON/Python calculator/venv/Lib/site-packages')
 import nuke
 import getpass
 import datetime
@@ -7,14 +6,12 @@ import os
 import pymongo
 from bson import ObjectId
 from mainUI import Ui_MainWindow
+sys.path.append('F:/PYTHON/Python calculator/venv/Lib/site-packages')
 
-try:
-    from PySide2.QtWidgets import *
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-except:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
+
+from PySide2.QtWidgets import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
 
 SERVER = pymongo.MongoClient('localhost', 27017)
 DB = SERVER['NukeShare']
@@ -67,11 +64,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def clicked_received_list(self):
         self.SentList.clearSelection()
-        self.RL = True
+        self.rl = True
 
     def clicked_sent_list(self):
         self.ReceivedList.clearSelection()
-        self.RL = False
+        self.rl = False
 
     # def userList(self):
     #
@@ -81,12 +78,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     #         users = i['user']
     #         self.artistNames.append(users)
 
-    def create_user(self):
+    @staticmethod
+    def create_user():
         finduser = COLLECTION.find_one({'user': username})
-        if finduser == None:
-            data = COLLECTION.insert_one({'user': username, 'Sent': [], 'Received': [], 'Favs': []})
-        else:
-            pass
+        if not finduser:
+            COLLECTION.insert_one({'user': username, 'Sent': [], 'Received': [], 'Favs': []})
 
     def insert_data(self):
         nuke_script_name = nuke.root().knob('name').value()
@@ -97,16 +93,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             sending_to = self.SenderName.currentText()
             nuke.nodeCopy("%clipboard%")
             script = QApplication.clipboard().text()
-
-            ############ Creating sender databse ############
             finduser = COLLECTION.find_one({'user': sending_to})
-            if finduser == None:
-                data = COLLECTION.insert_one({'user': sending_to, 'Sent': [], 'Received': [], 'Favs': []})
-            else:
-                pass
-
-            ############# Inserting in SentList ############
-
+            if not finduser:
+                COLLECTION.insert_one({'user': sending_to, 'Sent': [], 'Received': [], 'Favs': []})
             var = COLLECTION.find_one({'user': username})
             sentlen = len(var['Sent']) - 1
             sentlen = 1 + sentlen
@@ -114,17 +103,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 'Sent.{}'.format(sentlen): {'Send-To': sending_to,
                                             'ScriptName': script_name, 'script':
                                                 script, 'date': now, '_id': ObjectId()}}})
-
-            ############### Inserting in Received List ##########
             var = COLLECTION.find_one({'user': sending_to})
             receivedlen = len(var['Received']) - 1
             receivedlen = 1 + receivedlen
-
             COLLECTION.update_one({'user': sending_to}, {'$set': {
                 'Received.{}'.format(receivedlen): {
                     'SenderName': username, 'ScriptName': script_name,
-                    'script': script,'date': now, '_id': ObjectId()}}})
-
+                    'script': script, 'date': now, '_id': ObjectId()}}})
         self.refresh_app()
 
     def received_script_list(self):
@@ -132,15 +117,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         reclen = len(nukedata['Received'])
         self.ReceivedList.setRowCount(reclen)
         self.ReceivedList.setColumnCount(4)
-
         for x, i in enumerate(nukedata['Received']):
-            ScriptName = i['ScriptName']
-            SenderName = i['SenderName']
+            script_name = i['ScriptName']
+            sender_name = i['SenderName']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
-
-            self.ReceivedList.setItem(x, 0, QTableWidgetItem(ScriptName))
-            self.ReceivedList.setItem(x, 1, QTableWidgetItem(SenderName))
+            self.ReceivedList.setItem(x, 0, QTableWidgetItem(script_name))
+            self.ReceivedList.setItem(x, 1, QTableWidgetItem(sender_name))
             self.ReceivedList.setItem(x, 2, QTableWidgetItem(time))
             self.ReceivedList.setItem(x, 3, QTableWidgetItem(id))
 
@@ -151,12 +134,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.SentList.setColumnCount(4)
 
         for x, i in enumerate(nukedata['Sent']):
-            ScriptName = i['ScriptName']
-            Send_To = i['Send-To']
+            script_name = i['ScriptName']
+            send_to = i['Send-To']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
-            self.SentList.setItem(x, 0, QTableWidgetItem(ScriptName))
-            self.SentList.setItem(x, 1, QTableWidgetItem(Send_To))
+            self.SentList.setItem(x, 0, QTableWidgetItem(script_name))
+            self.SentList.setItem(x, 1, QTableWidgetItem(send_to))
             self.SentList.setItem(x, 2, QTableWidgetItem(time))
             self.SentList.setItem(x, 3, QTableWidgetItem(id))
 
@@ -167,16 +150,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.Fav_Table.setColumnCount(3)
 
         for x, i in enumerate(nukedata['Favs']):
-            ScriptName = i['ScriptName']
+            script_name = i['ScriptName']
             time = self.time_difference(i['date'])
             id = str(i['_id'])
-            self.Fav_Table.setItem(x, 0, QTableWidgetItem(ScriptName))
+            self.Fav_Table.setItem(x, 0, QTableWidgetItem(script_name))
             self.Fav_Table.setItem(x, 1, QTableWidgetItem(time))
             self.Fav_Table.setItem(x, 2, QTableWidgetItem(id))
 
     def paste_script(self):
         item = None
-        if self.RL:
+        if self.rl:
             row = self.ReceivedList.currentRow()
             currentid = self.ReceivedList.item(row, 3).text()
             all_items = COLLECTION.find_one({'user': username}, )
@@ -184,8 +167,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for i in var:
                 if currentid == str(i['_id']):
                     item = i['script']
-
-        elif not self.RL:
+        elif not self.rl:
             row = self.SentList.currentRow()
             currentid = self.SentList.item(row, 2).text()
             all_items = COLLECTION.find_one({'user': username}, )
@@ -193,7 +175,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for i in var:
                 if currentid == str(i['_id']):
                     item = i['script']
-
         QApplication.clipboard().setText(item)
         nuke.nodePaste('%clipboard%')
 
@@ -207,11 +188,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for i in var:
             if current_id == str(i['_id']):
                 item = i['script']
-
         QApplication.clipboard().setText(item)
         nuke.nodePaste('%clipboard%')
 
-    def time_difference(self,date):
+    @staticmethod
+    def time_difference(date):
         delta = datetime.datetime.today() - date
         if delta.days:
             return "%s day(s)" % delta.days
@@ -235,14 +216,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for i in rec_list:
             if i['_id'] == ObjectId(item):
                 add_fav = i
-
         items_list = COLLECTION.find_one({'user': username})
         favlen = len(items_list['Favs']) - 1
         favlen = 1 + favlen
         COLLECTION.update_one({'user': username}, {'$set': {'Favs.{}'.format(favlen): add_fav}})
         self.refresh_app()
 
-    def auto_delete(self):
+    @staticmethod
+    def auto_delete():
         item = COLLECTION.find({})
         for x, i in enumerate(item):
             for n in i['Sent']:
@@ -272,7 +253,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             id = i['_id']
             if id == ObjectId(item):
                 COLLECTION.update_one({'user': username}, {'$pull': {'Favs': i}})
-
         self.refresh_app()
 
     def refresh_app(self):
