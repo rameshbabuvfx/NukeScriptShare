@@ -11,5 +11,5 @@ def share_script():
     try:
         del sys.modules['NukeShareScript']
     except:
-        import NukeShareScript
-        NukeShareScript.main()
+        import nukeScriptShare
+        nukeScriptShare.main()
