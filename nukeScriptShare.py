@@ -1,24 +1,25 @@
 import nuke
 import os
 import datetime
+import getpass
 from bson import ObjectId
+from pymongo import MongoClient
+
+
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from rsp.core.database import mongoDatabase
-from rsp.core.utils import sysInfo
-from rsp.plugins.shotgun.scripts.shotgunOperations import ShotgunOperations
+
 from nukeScriptShare_ui import Ui_NukeScriptShare
 
 
 class NukeScriptShare(QMainWindow, Ui_NukeScriptShare):
     def __init__(self):
         super(NukeScriptShare, self).__init__()
-        self.mongo = mongoDatabase.MongoOperations(server="cgru", port=27017)
-        self.nuke_script_db = self.mongo.database("nuke_script_share")
-        self.nuke_script_collection = self.mongo.collection(self.nuke_script_db, "nuke_scripts")
-        self.shotgun_utils = ShotgunOperations()
-        self.username = sysInfo.os_user()
+        self.mongo = MongoClient("localhost", 27017)
+        self.nuke_script_db = self.mongo["nuke_script_share"]
+        self.nuke_script_collection = self.nuke_script_db["nuke_scripts"]
+        self.username = getpass.getuser()
         self.now = datetime.datetime.now()
         self.setupUi(self)
         self.rl = None
@@ -60,7 +61,7 @@ class NukeScriptShare(QMainWindow, Ui_NukeScriptShare):
         all_names = set()
         for i in self.nuke_script_collection.find():
             all_names.add(i['user'])
-        artist_names = self.shotgun_utils.get_active_users()
+        artist_names = ["ramesh", "james", "tom"]
         all_names.update(set(artist_names))
         completer = QCompleter(list(all_names))
         completer.setCaseSensitivity(Qt.CaseInsensitive)
