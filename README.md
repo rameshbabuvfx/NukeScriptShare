@@ -17,8 +17,8 @@ The NukeScriptShare tool makes it simple to share nuke nodes within a connected 
 * MongoDB Database.
 * Database management tool.
   `Preferred :MongoDB Compass, Robo 3T`.
-* Database with `nuke_script_share`.
-* Collection `nuke_scripts`.
+* Database with th name of `nuke_script_share`is required.
+* Need Collection with name of `nuke_scripts`.
 * Common server in local network.
 
 ## Configuration of the database
