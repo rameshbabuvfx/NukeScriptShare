@@ -1,11 +1,16 @@
 # NukeShareScript
 
 The NukeScriptShare tool makes it simple to share nuke nodes within a connected network. Artists can quickly paste the received nodes and use them.
-This tool is storing data in the MongoDB database.
-
-After two days, the data is automatically deleted from the database to free up space. Add to favourites if you want to save nodes for a long time. Deleting the favourites option is available.
 
 ![share nodes01](https://user-images.githubusercontent.com/73053972/147654988-c0b58a32-71be-4bc0-bda2-18d0694679f6.png)
+
+## Features
+
+* Easy to share nuke nodes/scripts
+* Storing in MongoDb Database.
+* Automatically Deletes data after two days.
+* Add to favourites to stay long time.
+* Display's all sent and received data ina table view.
 
 ## Requirements
 
@@ -35,4 +40,23 @@ https://www.mongodb.com/try/download/compass
 * Launch MongoDB Compass connect to `localhost:27017` server.
 * Create `nuke_script_share` database.
 * And create `nuke_scripts` collection in `nuke_script_share` database.
+
+## Installation
+
+* Clone the `NukeScriptShare `git repo.
+
+```
+https://github.com/rameshbabuvfx/NukeScriptShare
+```
+
+* Copy the NukeScriptShare folder path.
+* Open `init.py` python file from `.nuke` or nuke plugin folder
+* add this line of code in init.py file.
+
+```
+nuke.pluginAddPath("C:/Users/username/.nuke/NukeScriptShare")
+```
+
+* Launch/Restart Nuke.
+  
 
