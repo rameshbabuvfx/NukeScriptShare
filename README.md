@@ -29,7 +29,7 @@ The NukeScriptShare tool makes it simple to share nuke nodes within a connected 
 https://www.mongodb.com/try/download/community
 ```
 
-* Install the MongoDB in common server which is local connected to network.
+* Install the MongoDB in common server which is connected to local network.
 * Download MongoDB Compass.
 
 ```
