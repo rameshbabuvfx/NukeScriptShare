@@ -36,8 +36,8 @@ https://www.mongodb.com/try/download/community
 https://www.mongodb.com/try/download/compass
 ```
 
-* Start the Mongodb server uding mongo command.
-* Launch MongoDB Compass connect to `localhost:27017` server.
+* Start the Mongodb server using `mongo`command.
+* Launch MongoDB Compass and connect to `localhost:27017` server.
 * Create `nuke_script_share` database.
 * And create `nuke_scripts` collection in `nuke_script_share` database.
 
