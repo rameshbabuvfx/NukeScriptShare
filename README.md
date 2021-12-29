@@ -9,7 +9,7 @@ The NukeScriptShare tool makes it simple to share nuke nodes within a connected 
 * Easy to share nuke nodes/scripts
 * Storing in MongoDB Database.
 * Automatically deletes data after two days.
-* Add to favourites to stay long time.
+* To remain for a long time, add to favourites.
 * Display's all sent and received data in a table view.
 
 ## Requirements
