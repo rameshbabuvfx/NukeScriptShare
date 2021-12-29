@@ -1,5 +1,7 @@
 # NukeShareScript
 
+[![GitHub stars](https://img.shields.io/github/stars/rameshbabuvfx/smart_review_tool)](https://github.com/rameshbabuvfx/smart_review_tool/stargazers) ![GitHub release](https://img.shields.io/badge/python-3.7+-green) ![GitHub release (latest by date)](https://img.shields.io/badge/nuke-11.0+-yellow)
+
 The NukeScriptShare tool makes it simple to share nuke nodes within a connected network. Artists can quickly paste the received nodes and use them.
 
 ![share nodes01](https://user-images.githubusercontent.com/73053972/147654988-c0b58a32-71be-4bc0-bda2-18d0694679f6.png)
